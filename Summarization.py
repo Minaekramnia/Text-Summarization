@@ -2,12 +2,16 @@
 """
 Created on Thu Sep 19 14:38:30 2019
 
-@author: wb550776
+@author: Mina Ekramnia
 """
 import numpy as np
 import pandas as pd
 import nltk
 nltk.download('punkt') # one time execution
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+from sklearn.metrics.pairwise import cosine_similarity
+import networkx as nx
 import re
 import docx
 from nltk.tokenize import sent_tokenize
@@ -18,31 +22,29 @@ import sys
 #from docx import Document
 #document = Document()
 #document = Document('C:/Users/wb550776/Downloads/Using ML in Evaluative Synthesis May 31 2019.docx')
-
-
 def main():
     parser= argparse.ArgumentParser()
-    parser.argument("/Users/minaekramnia/Documents/CV Cover Letter/Mina Ekramnia_CoverLetter_Educ.docx")
+    parse.add_argument("filepath", "-f", type=str, required= True)
     args = parser.parse_args()
+    summerize(args.filepath)
     #the output comes to the council itself
-    sys.stdout.write(str(Summerization(args)))
-#Open the article
+    sys.stdout.write(str(summerization(args)))
     
-def Summerization(args):
-    def read_article(filename):
-        file = open(r'C:/Users/wb550776/Downloads/10144-Ghana-ELAC EvNote.docx', encoding='utf-8')
-        #file2 = open(r'C:/Users/wb550776/Downloads/README.txt')
-        filedata = file.readlines()
-        article = filedata[0].split(". ")
-        sentences = []
-
+#Open the article
+def read_article(filepath):
     ### IF the file is .csv format
-    df = pd.read_csv(r"C:\Users\wb550776\Documents\IEG_Sumerization\tennis_articles_v4.csv")
-    doc = docx.Document(r'/Users/minaekramnia/Documents/CV Cover Letter/Mina Ekramnia_CoverLetter_Educ.docx')
+    df = pd.read_csv(r"filepath")
+    doc = docx.Document(r'filepath')
     text = []
     for i in doc.paragraphs:
         text.append(i.text)
     
+def summerization(text):
+    #file = open(r'C:/Users/wb550776/Downloads/10144-Ghana-ELAC EvNote.docx', encoding='utf-8')
+    #file2 = open(r'C:/Users/wb550776/Downloads/README.txt')
+    filedata = file.readlines()
+    article = filedata[0].split(". ")
+
     #Split Text in to Sentences
     sentences = []
     for s in text:
@@ -58,15 +60,21 @@ def Summerization(args):
     
     # Extract the word vectors
     #cd C:\Users\wb550776\Documents\Projects\Summarization
+    
+    #def
+    
+    #if not :
+     #   then
+        
     word_embeddings = {}
     
-    f = open(r'C:\Users\wb550776\Documents\IEG_Sumerization\glove.6B.100d.txt', encoding='utf-8')
-    for line in f:
-        values = line.split()
-        word = values[0]
-        coefs = np.asarray(values[1:], dtype='float32')
-        word_embeddings[word] = coefs
-    f.close()
+    with f as open(r'C:\Users\wb550776\Documents\IEG_Sumerization\.6B.1glove00d.txt', encoding='utf-8'):
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            word_embeddings[word] = coefs
+    #f.close()
     
     len(word_embeddings)
     #We now have word vectors for 400,000 different terms stored in the dictionary – ‘word_embeddings’.
@@ -80,8 +88,6 @@ def Summerization(args):
     clean_sentences = [s.lower() for s in clean_sentences]
     
     #Get rid of Stopwords
-    nltk.download('stopwords')
-    from nltk.corpus import stopwords
     stop_words = stopwords.words('english')
     
     #define a function to remove the stopwords from the dataset:
@@ -128,8 +134,6 @@ def Summerization(args):
     
     #We will use Cosine Similarity to compute the similarity between a pair of sentences
     
-    from sklearn.metrics.pairwise import cosine_similarity
-    
     for i in range(len(sentences)):
       for j in range(len(sentences)):
         if i != j:
@@ -137,7 +141,6 @@ def Summerization(args):
     ############################
     ## Step 4 - Sort the rank and pick top sentences
     #Applying PageRank Algorithm
-    import networkx as nx
     nx_graph = nx.from_numpy_array(sim_mat)
     scores = nx.pagerank(nx_graph)
     ########################
