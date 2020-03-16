@@ -3,6 +3,8 @@
 Created on Thu Sep 19 14:38:30 2019
 
 @author: Mina Ekramnia
+
+#more information: https://appliedmachinelearning.blog/2019/12/31/extractive-text-summarization-using-glove-vectors/
 """
 import numpy as np
 import pandas as pd
@@ -10,18 +12,19 @@ import nltk
 # nltk.download('punkt') # one time execution
 # nltk.download('stopwords')
 from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 import re
 import docx
-from nltk.tokenize import sent_tokenize
 import argparse
 import sys
-#pip uninstall docx
-#pip install python-docx
-#from docx import Document
-#document = Document()
-#document = Document('C:/Users/wb550776/Downloads/Using ML in Evaluative Synthesis May 31 2019.docx')
+import os
+import wget
+# pip uninstall docx
+# pip install python-docx
+# from docx import Document
+# document = Document()
 def main():
     parser = argparse.ArgumentParser()
     parse.add_argument("filepath", type=str, required= True)
@@ -30,27 +33,37 @@ def main():
 
     result = summerization(args.filepath)
 
-#Open the article
+# Open the article
 def read_article(filepath):
     ### IF the file is .csv format
 	if '.csv' in filepath:
 		df = pd.read_csv(r"filepath")
 	elif '.docx' in filepath:
-	    doc = docx.Document(r'filepath')
-    text = []
-    for i in doc.paragraphs:
+	    df = docx.Document(r'filepath')
+    
+    text =[]
+    for i in df:
         text.append(i.text)
 	return text
 
 def get_glove_vectors():
 	## check for file
-	filename ='glove_vectors.txt';
+    path_to_file ='glove_vectors.txt';
+    if not os.path.exists(path_to_file):
+	    wget.download('http://nlp.stanford.edu/data/glove.6B.zip', path_to_file)
+    with f as open(path_to_file):
+          for line in f:
+              values = line.split()
+              word = values[0]
+              coefs = np.asarray(values[1:], dtype='float32')
+              word_embeddings[word] = coefs
+    	return word_embeddings
+    
+	glove_vectors ='glove_vectors.txt';
 	## if no glove file
-		wget('http://nlp.stanford.edu/data/glove.6B.zip', filename')
-
-	open('filename')
-	return vectors
-
+	!wget('http://nlp.stanford.edu/data/glove.6B.zip', 'glove_vectors')
+	open('glove_vectors')
+	return glove_vectors
 
 def remove_stopwords(sen):
     sen_new = " ".join([i for i in sen if i not in stop_words])
@@ -77,14 +90,6 @@ def summerization(filepath):
     #!wget http://nlp.stanford.edu/data/glove.6B.zip
     #!unzip glove*.zip
 
-    # Extract the word vectors
-    #cd C:\Users\wb550776\Documents\Projects\Summarization
-
-    #def
-
-    #if not :
-     #   then
-
     # word_embeddings = {}
 	embeddings = get_glove_vectors()
 
@@ -103,34 +108,26 @@ def summerization(filepath):
     #Text Preprocessing
     # remove punctuations, numbers and special characters
     clean_sentences = pd.Series(sentences).str.replace("[^a-zA-Z]", " ")
-
     # make alphabets lowercase
     clean_sentences = [s.lower() for s in clean_sentences]
-
     #Get rid of Stopwords
     stop_words = stopwords.words('english')
 
     #define a function to remove the stopwords from the dataset:
     # function to remove stopwords
-
-
-
     # remove stopwords from the sentences
     clean_sentences = [remove_stopwords(r.split()) for r in clean_sentences]
-
 
     ####################################
     ##Vector Representation of Sentences
 
-    # # Extract word vectors
-    word_embeddings = {}
-    f = open(r'C:\Users\wb550776\Documents\IEG_Sumerization\glove.6B.100d.txt', encoding='utf-8')
-    for line in f:
-        values = line.split()
-        word = values[0]
-        coefs = np.asarray(values[1:], dtype='float32')
-        word_embeddings[word] = coefs
-    f.close()
+
+    #with f as open('glove_vectors')
+    #for line in f:
+     #   values = line.split()
+      #  word = values[0]
+       # coefs = np.asarray(values[1:], dtype='float32')
+        #word_embeddings[word] = coefs
 
     #Now, let’s create vectors for our sentences. We will first fetch vectors
     #(each of size 100 elements) for the constituent words in a sentence and then
