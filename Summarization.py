@@ -35,21 +35,21 @@ def main():
 # Open the article
 def read_article(filepath):
     ### IF the file is .csv format
-	if '.csv' in filepath:
-		df = pd.read_csv(r"filepath")
-	elif '.docx' in filepath:
-	    df = docx.Document(r'filepath')
-    
+    if '.csv' in filepath:
+        df = pd.read_csv(r"filepath")
+    elif '.docx' in filepath:
+        df = docx.Document(r'filepath')
+
     text =[]
     for i in df:
         text.append(i.text)
     return text
 
 def get_glove_vectors():
-	## check for file
+    ## check for file
     path_to_file ='glove_vectors.txt';
     if not os.path.exists(path_to_file):
-	    wget.download('http://nlp.stanford.edu/data/glove.6B.zip', path_to_file)
+        wget.download('http://nlp.stanford.edu/data/glove.6B.zip', path_to_file)
     with f as open(path_to_file):
           for line in f:
               values = line.split()
@@ -57,12 +57,12 @@ def get_glove_vectors():
               coefs = np.asarray(values[1:], dtype='float32')
               word_embeddings[word] = coefs
     	return word_embeddings
-    
-	glove_vectors ='glove_vectors.txt';
-	## if no glove file
-	!wget('http://nlp.stanford.edu/data/glove.6B.zip', 'glove_vectors')
-	open('glove_vectors')
-	return glove_vectors
+
+    glove_vectors ='glove_vectors.txt';
+    ## if no glove file
+    !wget('http://nlp.stanford.edu/data/glove.6B.zip', 'glove_vectors')
+    open('glove_vectors')
+    return glove_vectors
 
 def remove_stopwords(sen):
     sen_new = " ".join([i for i in sen if i not in stop_words])
@@ -70,7 +70,7 @@ def remove_stopwords(sen):
 
 def summerization(filepath):
 
-	text = read_article(filepath)
+    text = read_article(filepath)
     #file = open(r'C:/Users/wb550776/Downloads/10144-Ghana-ELAC EvNote.docx', encoding='utf-8')
     #file2 = open(r'C:/Users/wb550776/Downloads/README.txt')
     # filedata = file.readlines()
@@ -90,7 +90,7 @@ def summerization(filepath):
     #!unzip glove*.zip
 
     # word_embeddings = {}
-	embeddings = get_glove_vectors()
+    embeddings = get_glove_vectors()
 
     # with f as open(r'C:\Users\wb550776\Documents\IEG_Sumerization\.6B.1glove00d.txt', encoding='utf-8'):
     #     for line in f:
