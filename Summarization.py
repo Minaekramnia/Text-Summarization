@@ -30,7 +30,6 @@ def main():
     parse.add_argument("filepath", type=str, required= True)
     args = parser.parse_args()
     # print(args)
-
     result = summerization(args.filepath)
 
 # Open the article
@@ -44,7 +43,7 @@ def read_article(filepath):
     text =[]
     for i in df:
         text.append(i.text)
-	return text
+    return text
 
 def get_glove_vectors():
 	## check for file
