@@ -56,7 +56,7 @@ def get_glove_vectors():
               word = values[0]
               coefs = np.asarray(values[1:], dtype='float32')
               word_embeddings[word] = coefs
-    	return word_embeddings
+    return word_embeddings
 
     glove_vectors ='glove_vectors.txt';
     ## if no glove file
