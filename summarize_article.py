@@ -1,5 +1,6 @@
 import os
 import wget
+from argparse import ArgumentParser
 import zipfile
 import numpy as np
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -97,5 +98,8 @@ def summarize_file(filename, num_sentences=3):
 
 
 if __name__ == '__main__':
-    summary = summarize_file('test-article.txt')
+    parser = ArgumentParser()
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    summary = summarize_file(args.filename)
     print(summary)
