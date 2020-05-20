@@ -4,6 +4,9 @@ import zipfile
 import numpy as np
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
+import networkx as nx
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 
 GLOVE_VECTORS_URL = 'http://nlp.stanford.edu/data/glove.6B.zip'
@@ -64,7 +67,25 @@ def sentences_to_vectors(sentences, word_embeddings):
     return sentence_vectors
 
 
+def get_pagerank_scores(sentence_vectors):
+    sim_mat = np.zeros([len(sentences), len(sentences)])
+
+    for i, sentence in enumerate(sentences):
+        for j, sentence in enumerate(sentences):
+            sim_mat[i][j] = cosine_similarity(
+                sentence_vectors[i].reshape(1, -1),
+                sentence_vectors[j].reshape(1, -1)
+            )[0, 0]
+
+    nx_graph = nx.from_numpy_array(sim_mat)
+    scores = nx.pagerank(nx_graph)
+
+    return scores
+
+
 if __name__ == '__main__':
     sentences = get_setences_from_file('test-article.txt')
     word_vectors = get_word_vectors()
     sentence_vectors = sentences_to_vectors(sentences, word_vectors)
+    scores = get_pagerank_scores(sentence_vectors)
+    print(scores)
