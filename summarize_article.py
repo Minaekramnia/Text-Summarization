@@ -2,14 +2,16 @@ import os
 import wget
 import zipfile
 import numpy as np
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+
 
 GLOVE_VECTORS_URL = 'http://nlp.stanford.edu/data/glove.6B.zip'
 
 
 def get_setences_from_file(filename):
     with open(filename) as f:
-        text = f.read().replace('\n', ' ')  # replace new lines with spaces
+        text = f.read()
 
     return sent_tokenize(text)
 
@@ -34,8 +36,35 @@ def get_word_vectors():
     return glove_vectors
 
 
+def tokenize_sentence(sentence):
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(sentence)
+    filtered_words = [word for word in words if word not in stop_words]
+    return filtered_words
+
+
+def clean_sentence(sentence):
+    'Naive function to remove punctaion and special characters'
+    return sentence.lower().replace('\n', ' ').replace('!', '').replace('?', '') # noqa
+
+
+def sentences_to_vectors(sentences, word_embeddings):
+    sentence_vectors = []
+    for sentence in sentences:
+        cleaned_sentence = clean_sentence(sentence)
+        words = tokenize_sentence(cleaned_sentence)
+        word_vectors = []
+        for word in words:
+            word_vector = word_embeddings.get(word, np.zeros(50,))
+            word_vectors.append(word_vector)
+
+        sentence_vector = sum(word_vectors) / len(word_vectors)
+        sentence_vectors.append(sentence_vector)
+
+    return sentence_vectors
+
+
 if __name__ == '__main__':
     sentences = get_setences_from_file('test-article.txt')
-    print(sentences)
     word_vectors = get_word_vectors()
-    print(len(word_vectors))
+    sentence_vectors = sentences_to_vectors(sentences, word_vectors)
