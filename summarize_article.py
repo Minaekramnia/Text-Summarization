@@ -8,7 +8,6 @@ import networkx as nx
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-
 GLOVE_VECTORS_URL = 'http://nlp.stanford.edu/data/glove.6B.zip'
 
 
@@ -68,10 +67,10 @@ def sentences_to_vectors(sentences, word_embeddings):
 
 
 def get_pagerank_scores(sentence_vectors):
-    sim_mat = np.zeros([len(sentences), len(sentences)])
+    sim_mat = np.zeros([len(sentence_vectors), len(sentence_vectors)])
 
-    for i, sentence in enumerate(sentences):
-        for j, sentence in enumerate(sentences):
+    for i, sentence in enumerate(sentence_vectors):
+        for j, sentence in enumerate(sentence_vectors):
             sim_mat[i][j] = cosine_similarity(
                 sentence_vectors[i].reshape(1, -1),
                 sentence_vectors[j].reshape(1, -1)
@@ -83,9 +82,20 @@ def get_pagerank_scores(sentence_vectors):
     return scores
 
 
-if __name__ == '__main__':
-    sentences = get_setences_from_file('test-article.txt')
+def summarize_file(filename, num_sentences=3):
+    sentences = get_setences_from_file(filename)
     word_vectors = get_word_vectors()
     sentence_vectors = sentences_to_vectors(sentences, word_vectors)
     scores = get_pagerank_scores(sentence_vectors)
-    print(scores)
+
+    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    top_n_indices = [score[0] for score in sorted_scores[:num_sentences]]
+
+    top_sentenes = [sentences[i] for i in top_n_indices]
+
+    return ' '.join(top_sentenes)
+
+
+if __name__ == '__main__':
+    summary = summarize_file('test-article.txt')
+    print(summary)
