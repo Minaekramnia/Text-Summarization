@@ -1,5 +1,8 @@
 click==7.1.2
 joblib==0.15.1
 nltk==3.5
+np==1.0.2
+numpy==1.18.4
 regex==2020.5.14
 tqdm==4.46.0
+wget==3.2
