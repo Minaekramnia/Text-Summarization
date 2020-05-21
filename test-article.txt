@@ -1,0 +1,4 @@
+This is a sample article to be used for testing. Nothing very special about it.
+In fact, there is almost no information content at all here. Just a bunch of
+sentences with real words that we can use to test our script. Okay. Here is another sentence.
+And another! In fact, these are all examples of sentences. I wonder which ones are most important?
