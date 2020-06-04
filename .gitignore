@@ -1,2 +1,9 @@
+#######################
+# List of files with GitHub functionality anywhere in the repo
+# that we do want to ignore
 venv
 .DS_Store
+glove_vectors.txt
+glove_vectors
+glove_vectors.txt3bxb3fyg.tmp
+glove_vectors.zip
