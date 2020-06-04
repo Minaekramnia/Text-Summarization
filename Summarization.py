@@ -4,13 +4,10 @@ Created on Thu Sep 19 14:38:30 2019
 
 @author: Mina Ekramnia
 
-#more information: https://appliedmachinelearning.blog/2019/12/31/extractive-text-summarization-using-glove-vectors/
 """
 import numpy as np
 import pandas as pd
 import nltk
-# nltk.download('punkt') # one time execution
-# nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
 from sklearn.metrics.pairwise import cosine_similarity
@@ -21,180 +18,102 @@ import argparse
 import sys
 import os
 import wget
-# pip uninstall docx
-# pip install python-docx
-# from docx import Document
-# document = Document()
-def main():
-    parser = argparse.ArgumentParser()
-    parse.add_argument("filepath", type=str, required= True)
-    args = parser.parse_args()
-    # print(args)
-    result = summerization(args.filepath)
+import zipfile
+from argparse import ArgumentParser
 
-# Open the article
 def read_article(filepath):
-    ### IF the file is .csv format
+    # IF the file is .csv format
     if '.csv' in filepath:
         df = pd.read_csv(r"filepath")
     elif '.docx' in filepath:
-        df = docx.Document(r'filepath')
+        df = docx.Document(r'filepath') #array of string
+    elif '.txt' in filepath:
+        with open(filepath) as f:
+            text = f.read() 
+        return text #early return of an string
 
     text =[]
     for i in df:
         text.append(i.text)
-    return text
+    return text #array
 
 def get_glove_vectors():
-    ## check for file
-    path_to_file ='glove_vectors.txt';
+    # check for file if it exists
+    # download the zipfile and extract in to txts
+    path_to_file ='glove_vectors.zip';
     if not os.path.exists(path_to_file):
         wget.download('http://nlp.stanford.edu/data/glove.6B.zip', path_to_file)
-    with f as open(path_to_file):
+
+    with zipfile.ZipFile(path_to_file) as zip:
+        zip.extractall('glove_vectors')
+
+    word_embeddings = {}
+    with open("glove_vectors/glove.6B.50d.txt", encoding='utf-8') as f:
           for line in f:
               values = line.split()
               word = values[0]
               coefs = np.asarray(values[1:], dtype='float32')
               word_embeddings[word] = coefs
+
     return word_embeddings
 
-    glove_vectors ='glove_vectors.txt';
-    ## if no glove file
-    !wget('http://nlp.stanford.edu/data/glove.6B.zip', 'glove_vectors')
-    open('glove_vectors')
-    return glove_vectors
+def clean_sentences(sentences):
+    stop_words = set(stopwords.words('english'))
 
-def remove_stopwords(sen):
-    sen_new = " ".join([i for i in sen if i not in stop_words])
-    return sen_new
+    new_sentences = []
+    for sentence in sentences:
+        lowercase_sentence = sentence.lower().replace('.', '').replace(',', '')
+        tokenized_sentence = lowercase_sentence.split(' ')
+        new_sentences.append([word for word in tokenized_sentence if word not in stop_words])
 
-def summerization(filepath):
+    return new_sentences
 
-    text = read_article(filepath)
-    #file = open(r'C:/Users/wb550776/Downloads/10144-Ghana-ELAC EvNote.docx', encoding='utf-8')
-    #file2 = open(r'C:/Users/wb550776/Downloads/README.txt')
-    # filedata = file.readlines()
-    # article = filedata[0].split(". ")
+def get_sentence_vectors(sentences):
 
-    #Split Text in to Sentences
-    sentences = []
-    for s in text:
-      sentences.append(sent_tokenize(s))
+    cleaned_sentences = clean_sentences(sentences)
 
-    sentences = [y for x in sentences for y in x] # flatten list
+    embedding_dict = get_glove_vectors()
 
-    #for s in df['article_text']:
-    #  sentences.append(sent_tokenize(s))
+    vectorized_setences = []
+    for sentence in cleaned_sentences:
+        word_vectors = [] 
+        for word in sentence:
+            vec = embedding_dict.get(word, np.zeros((50,)))
+            word_vectors.append(vec) #list of 50 dim vectors
+        #to represent each sentence by taking avg of all word vectors    
+        sentence_vector = sum(word_vectors,0)/len(word_vectors)
 
-    #!wget http://nlp.stanford.edu/data/glove.6B.zip
-    #!unzip glove*.zip
+        vectorized_setences.append(sentence_vector)
 
-    # word_embeddings = {}
-    embeddings = get_glove_vectors()
+    return vectorized_setences
 
-    # with f as open(r'C:\Users\wb550776\Documents\IEG_Sumerization\.6B.1glove00d.txt', encoding='utf-8'):
-    #     for line in f:
-    #         values = line.split()
-    #         word = values[0]
-    #         coefs = np.asarray(values[1:], dtype='float32')
-    #         word_embeddings[word] = coefs
-    # #f.close()
-
-    len(word_embeddings)
-    #We now have word vectors for 400,000 different terms stored in the dictionary – ‘word_embeddings’.
-
-    #################
-    #Text Preprocessing
-    # remove punctuations, numbers and special characters
-    clean_sentences = pd.Series(sentences).str.replace("[^a-zA-Z]", " ")
-    # make alphabets lowercase
-    clean_sentences = [s.lower() for s in clean_sentences]
-    #Get rid of Stopwords
-    stop_words = stopwords.words('english')
-
-    #define a function to remove the stopwords from the dataset:
-    # function to remove stopwords
-    # remove stopwords from the sentences
-    clean_sentences = [remove_stopwords(r.split()) for r in clean_sentences]
-
-    ####################################
-    ##Vector Representation of Sentences
-
-
-    #with f as open('glove_vectors')
-    #for line in f:
-     #   values = line.split()
-      #  word = values[0]
-       # coefs = np.asarray(values[1:], dtype='float32')
-        #word_embeddings[word] = coefs
-
-    #Now, let’s create vectors for our sentences. We will first fetch vectors
-    #(each of size 100 elements) for the constituent words in a sentence and then
-    #take mean/average of those vectors to arrive at a consolidated vector for the sentence.
-
-    sentence_vectors = []
-    for i in clean_sentences:
-      if len(i) != 0:
-        v = sum([word_embeddings.get(w, np.zeros((100,))) for w in i.split()])/(len(i.split())+0.001)
-      else:
-        v = np.zeros((100,))
-      sentence_vectors.append(v)
-
-    ##############################
-    ###Step 3: Rank Sentences in Similarity Matrix
-
-    #Similarity matrix Preparation
-    sim_mat = np.zeros([len(sentences), len(sentences)])
-
-    #We will use Cosine Similarity to compute the similarity between a pair of sentences
-
-    for i in range(len(sentences)):
-      for j in range(len(sentences)):
-        if i != j:
-          sim_mat[i][j] = cosine_similarity(sentence_vectors[i].reshape(1,100), sentence_vectors[j].reshape(1,100))[0,0]
-    ############################
-    ## Step 4 - Sort the rank and pick top sentences
-    #Applying PageRank Algorithm
+def get_top_ranked_sentences(sentence_vectors):
+    #Sort the rank and pick top sentences based on Similarity matrix 
+    # We will use Cosine Similarity to compute the similarity between a pair of sentences
+    sim_mat = np.zeros([len(sentence_vectors), len(sentence_vectors)])
+    for i in range(len(sentence_vectors)):
+       for j in range(len(sentence_vectors)):
+         if i != j:
+           sim_mat[i][j] = cosine_similarity(sentence_vectors[i].reshape(1,50), sentence_vectors[j].reshape(1,50))[0,0]
+           
+    #we represent a graph by adjancacy matrix. 
+    #score based on those sentences that are more relevant
     nx_graph = nx.from_numpy_array(sim_mat)
-    scores = nx.pagerank(nx_graph)
-    ########################
-    ##Summary Extraction
-    ranked_sentences = sorted(((scores[i],s) for i,s in enumerate(sentences)), reverse=True)
-    # Extract top 10 sentences as the summary
-    for i in range(2):
-      print(ranked_sentences[i][1])
+    scores = nx.pagerank(nx_graph)  
+    print(nx_graph)
 
+    #A tuple of two elements: index and scores.
+    ranked_indexes = [key for (key, value) in sorted(scores.items(), key=lambda x: x[1],reverse=True)]
+    #Extract top 3 sentences as the summary
+    return ranked_indexes[:3]    
 
-    ### If the file is a text .txt format
-    file = 'input.txt'
-    file = open(r'C:/Users/wb550776/Downloads/README.txt')
-    file = open(r'C:/Users/wb550776/Downloads/Using ML in Evaluative Synthesis May 31 2019.docx')
-    #file = open(file , 'r')
-    text = file.read()
-    tokenized_sentence = sent_tokenize(text)
-    sentences = tokenized_sentence
-
-    text = remove_special_characters(str(text))
-    text = re.sub(r'\d+', '', text)
-    tokenized_words_with_stopwords = word_tokenize(text)
-    tokenized_words = [word for word in tokenized_words_with_stopwords if word not in Stopwords]
-    tokenized_words = [word for word in tokenized_words if len(word) > 1]
-    tokenized_words = [word.lower() for word in tokenized_words]
-
-    # output to excel
-    writer = pd.ExcelWriter(os.path.join('tables', 'document_prediction.xlsx'))
-    df.to_excel(writer, sheet_name='project_prediction')
-    result_list[0].to_excel(writer, sheet_name='category1_salient_prediction')
-    # df_result_topic.to_excel(writer, sheet_name='salient_prediction_by_topic')
-    writer.save()
-
-if __name__ == '__main__':
-    print('here')
-    main()
-
-#The output in excel
-#go over different projects, number of project. output is number: top 1, top 5.
-#readme.
-#put things in the left, get the outputs.
-#README. Try on his computer.
-#Then different algorithms. accuracy?
+if __name__ == '__main__': 
+    filename = input('Please enter the filename: ')
+    text = read_article(filename)
+    sentences = sent_tokenize(text)
+    sentence_vectors = get_sentence_vectors(sentences)
+    ranked_indexes=get_top_ranked_sentences(sentence_vectors)#return indexes
+    top_sentences=[sentences[i] for i in ranked_indexes]#a list of sentences in to one string. 
+    summary=' '.join(top_sentences)
+    print(summary)
+    
