@@ -21,6 +21,8 @@ import wget
 import zipfile
 from argparse import ArgumentParser
 
+
+## some small change
 def read_article(filepath):
     # IF the file is .csv format
     if '.csv' in filepath:
@@ -29,7 +31,7 @@ def read_article(filepath):
         df = docx.Document(r'filepath') #array of string
     elif '.txt' in filepath:
         with open(filepath) as f:
-            text = f.read() 
+            text = f.read()
         return text #early return of an string
 
     text =[]
@@ -76,11 +78,11 @@ def get_sentence_vectors(sentences):
 
     vectorized_setences = []
     for sentence in cleaned_sentences:
-        word_vectors = [] 
+        word_vectors = []
         for word in sentence:
             vec = embedding_dict.get(word, np.zeros((50,)))
             word_vectors.append(vec) #list of 50 dim vectors
-        #to represent each sentence by taking avg of all word vectors    
+        #to represent each sentence by taking avg of all word vectors
         sentence_vector = sum(word_vectors,0)/len(word_vectors)
 
         vectorized_setences.append(sentence_vector)
@@ -88,32 +90,31 @@ def get_sentence_vectors(sentences):
     return vectorized_setences
 
 def get_top_ranked_sentences(sentence_vectors):
-    #Sort the rank and pick top sentences based on Similarity matrix 
+    #Sort the rank and pick top sentences based on Similarity matrix
     # We will use Cosine Similarity to compute the similarity between a pair of sentences
     sim_mat = np.zeros([len(sentence_vectors), len(sentence_vectors)])
     for i in range(len(sentence_vectors)):
        for j in range(len(sentence_vectors)):
          if i != j:
            sim_mat[i][j] = cosine_similarity(sentence_vectors[i].reshape(1,50), sentence_vectors[j].reshape(1,50))[0,0]
-           
-    #we represent a graph by adjancacy matrix. 
+
+    #we represent a graph by adjancacy matrix.
     #score based on those sentences that are more relevant
     nx_graph = nx.from_numpy_array(sim_mat)
-    scores = nx.pagerank(nx_graph)  
+    scores = nx.pagerank(nx_graph)
     print(nx_graph)
 
     #A tuple of two elements: index and scores.
     ranked_indexes = [key for (key, value) in sorted(scores.items(), key=lambda x: x[1],reverse=True)]
     #Extract top 3 sentences as the summary
-    return ranked_indexes[:3]    
+    return ranked_indexes[:3]
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     filename = input('Please enter the filename: ')
     text = read_article(filename)
     sentences = sent_tokenize(text)
     sentence_vectors = get_sentence_vectors(sentences)
     ranked_indexes=get_top_ranked_sentences(sentence_vectors)#return indexes
-    top_sentences=[sentences[i] for i in ranked_indexes]#a list of sentences in to one string. 
+    top_sentences=[sentences[i] for i in ranked_indexes]#a list of sentences in to one string.
     summary=' '.join(top_sentences)
     print(summary)
-    
