@@ -19,6 +19,8 @@ import sys
 import os
 import wget
 import zipfile
+import argparse
+import sys
 from argparse import ArgumentParser
 
 def read_article(filepath):
@@ -87,7 +89,7 @@ def get_sentence_vectors(sentences):
 
     return vectorized_setences
 
-def get_top_ranked_sentences(sentence_vectors):
+def get_top_ranked_sentences(sentence_vectors,n):
     #Sort the rank and pick top sentences based on Similarity matrix 
     # We will use Cosine Similarity to compute the similarity between a pair of sentences
     sim_mat = np.zeros([len(sentence_vectors), len(sentence_vectors)])
@@ -105,14 +107,20 @@ def get_top_ranked_sentences(sentence_vectors):
     #A tuple of two elements: index and scores.
     ranked_indexes = [key for (key, value) in sorted(scores.items(), key=lambda x: x[1],reverse=True)]
     #Extract top 3 sentences as the summary
-    return ranked_indexes[:3]    
+    return ranked_indexes[:n]    
 
 if __name__ == '__main__': 
-    filename = input('Please enter the filename: ')
-    text = read_article(filename)
+    parser = argparse.ArgumentParser() #initializing parser obj
+    #parser = argumentparser()
+    parser.add_argument('filename') #default=3 n,type=int calling a method 
+    parser.add_argument('--n',type=int,default=3, help='add number of sentences')
+    #parser = argparse.ArgumentParser(description='Process some integers.')
+    args = parser.parse_args() #give me all the arguments
+    #filename = input('Please enter the filename: ')
+    text = read_article(args.filename)
     sentences = sent_tokenize(text)
     sentence_vectors = get_sentence_vectors(sentences)
-    ranked_indexes=get_top_ranked_sentences(sentence_vectors)#return indexes
+    ranked_indexes=get_top_ranked_sentences(sentence_vectors,args.n)#return indexes
     top_sentences=[sentences[i] for i in ranked_indexes]#a list of sentences in to one string. 
     summary=' '.join(top_sentences)
     print(summary)
